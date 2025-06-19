@@ -1,21 +1,18 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Tree List</title>
-</head>
-<body>
-    <h1>All Trees</h1>
+{% extends "base.html" %}
+{% block title %}All Trees{% endblock %}
+{% block content %}
 
-    <p><a href="/add/">🌱 Submit a New Tree</a></p>
+<h2 class="mb-3">All Trees</h2>
+<a class="btn btn-success mb-3" href="/add/">➕ Add New Tree</a>
 
-    <ul>
-        {% for tree in trees %}
-            <li>
-                <a href="{{ tree.id }}/">{{ tree.name }} ({{ tree.species }})</a>
-            </li>
-        {% empty %}
-            <li>No trees have been added yet.</li>
-        {% endfor %}
-    </ul>
-</body>
-</html>
+<ul class="list-group">
+    {% for tree in trees %}
+        <li class="list-group-item">
+            <a href="{{ tree.id }}/">{{ tree.name }} ({{ tree.species }})</a>
+        </li>
+    {% empty %}
+        <li class="list-group-item">No trees found.</li>
+    {% endfor %}
+</ul>
+
+{% endblock %}

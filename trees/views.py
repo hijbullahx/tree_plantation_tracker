@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Tree
-from .forms import TreeForm
+from .forms import TreeForm, HealthLogForm, TaskForm
 
 def tree_list(request):
     trees = Tree.objects.all()
@@ -24,8 +24,31 @@ def tree_detail(request, pk):
     tree = get_object_or_404(Tree, pk=pk)
     health_logs = tree.health_logs.all().order_by('-date')
     tasks = tree.tasks.all().order_by('scheduled_date')
+
+    health_form = HealthLogForm()
+    task_form = TaskForm()
+
+    if request.method == 'POST':
+        if request.POST.get('form_type') == 'health':
+            health_form = HealthLogForm(request.POST)
+            if health_form.is_valid():
+                log = health_form.save(commit=False)
+                log.tree = tree
+                log.save()
+                return redirect('tree_detail', pk=tree.pk)
+        elif request.POST.get('form_type') == 'task':
+            task_form = TaskForm(request.POST)
+            if task_form.is_valid():
+                task = task_form.save(commit=False)
+                task.tree = tree
+                task.save()
+                return redirect('tree_detail', pk=tree.pk)
+
     return render(request, 'trees/tree_detail.html', {
         'tree': tree,
         'health_logs': health_logs,
-        'tasks': tasks
+        'tasks': tasks,
+        'health_form': health_form,
+        'task_form': task_form,
     })
+

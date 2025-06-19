@@ -1,55 +1,56 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{{ tree.name }} Details</title>
-</head>
-<body>
-    <h1>{{ tree.name }} ({{ tree.species }})</h1>
-    <p><strong>Location:</strong> {{ tree.location }}</p>
-    <p><strong>Date Planted:</strong> {{ tree.date_planted }}</p>
-    {% if tree.image %}
-        <img src="{{ tree.image.url }}" width="200">
-    {% endif %}
+{% extends "base.html" %}
+{% block title %}{{ tree.name }}{% endblock %}
+{% block content %}
 
-    <hr>
-    <h2>🌿 Health Logs</h2>
-    {% if health_logs %}
-        <ul>
-            {% for log in health_logs %}
-                <li>{{ log.date }} — {{ log.health_status }} ({{ log.notes }})</li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>No health logs available.</p>
-    {% endif %}
+<div class="card mb-4">
+    <div class="card-body">
+        <h3 class="card-title">{{ tree.name }} ({{ tree.species }})</h3>
+        <p><strong>Location:</strong> {{ tree.location }}</p>
+        <p><strong>Planted on:</strong> {{ tree.date_planted }}</p>
+        {% if tree.image %}
+            <img src="{{ tree.image.url }}" class="img-fluid" style="max-width: 300px;">
+        {% endif %}
+    </div>
+</div>
 
-    <form method="POST">
-        {% csrf_token %}
-        {{ health_form.as_p }}
-        <button type="submit" name="submit_health_log">Add Health Log</button>
-    </form>
+<h4>🌿 Health Logs</h4>
+<ul class="list-group mb-3">
+    {% for log in health_logs %}
+        <li class="list-group-item">
+            {{ log.date }} – <strong>{{ log.health_status }}</strong><br>
+            <small>{{ log.notes }}</small>
+        </li>
+    {% empty %}
+        <li class="list-group-item">No health logs.</li>
+    {% endfor %}
+</ul>
 
-    <hr>
-    <h2>🧑‍🌾 Scheduled Tasks</h2>
-    {% if tasks %}
-        <ul>
-            {% for task in tasks %}
-                <li>
-                    {{ task.scheduled_date }} — {{ task.task_type }} 
-                    {% if task.completed %}✅{% else %}❌{% endif %}
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>No tasks scheduled.</p>
-    {% endif %}
+<form method="POST" class="mb-4">
+    {% csrf_token %}
+    <h5>Add Health Log</h5>
+    {{ health_form.as_p }}
+    <button type="submit" name="form_type" value="health" class="btn btn-outline-success">Add Health Log</button>
+</form>
 
-    <form method="POST">
-        {% csrf_token %}
-        {{ task_form.as_p }}
-        <button type="submit" name="submit_task">Add Task</button>
-    </form>
+<h4>🧑‍🌾 Scheduled Tasks</h4>
+<ul class="list-group mb-3">
+    {% for task in tasks %}
+        <li class="list-group-item">
+            {{ task.scheduled_date }} — {{ task.task_type }} 
+            {% if task.completed %}✅ Done{% else %}❌ Not Done{% endif %}
+        </li>
+    {% empty %}
+        <li class="list-group-item">No tasks scheduled.</li>
+    {% endfor %}
+</ul>
 
-    <p><a href="/">← Back to Tree List</a></p>
-</body>
-</html>
+<form method="POST" class="mb-4">
+    {% csrf_token %}
+    <h5>Schedule a Task</h5>
+    {{ task_form.as_p }}
+    <button type="submit" name="form_type" value="task" class="btn btn-outline-primary">Add Task</button>
+</form>
+
+<a class="btn btn-secondary" href="/">← Back to List</a>
+
+{% endblock %}
