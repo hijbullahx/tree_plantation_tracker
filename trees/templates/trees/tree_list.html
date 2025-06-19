@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tree List</title>
+</head>
+<body>
+    <h1>All Trees</h1>
+
+    <p><a href="/add/">🌱 Submit a New Tree</a></p>
+
+    <ul>
+        {% for tree in trees %}
+            <li>
+                <a href="{{ tree.id }}/">{{ tree.name }} ({{ tree.species }})</a>
+            </li>
+        {% empty %}
+            <li>No trees have been added yet.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

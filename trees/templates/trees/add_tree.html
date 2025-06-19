@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Tree</title>
+</head>
+<body>
+    <h1>Add a New Tree</h1>
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Add Tree</button>
+    </form>
+    <a href="/">← Back to Tree List</a>
+</body>
+</html>
