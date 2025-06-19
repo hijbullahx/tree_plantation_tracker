@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Edit Profile{% endblock %}
+{% block content %}
+<h2>Edit Profile</h2>
+{% if message %}
+<div class="alert alert-success">{{ message }}</div>
+{% endif %}
+<div class="row">
+  <div class="col-md-6">
+    <form method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ user_form.as_p }}
+      {{ profile_form.as_p }}
+      <div class="mb-3">
+        <label for="id_profile_picture" class="form-label">Profile Picture</label><br>
+        {% if profile.profile_picture %}
+          <img src="{{ profile.profile_picture.url }}" class="img-thumbnail mb-2" style="max-width: 120px;">
+        {% else %}
+          <img src="https://ui-avatars.com/api/?name={{ user.username }}" class="img-thumbnail mb-2" style="max-width: 120px;">
+        {% endif %}
+        {{ form.profile_picture }}
+      </div>
+      <button type="submit" name="update_profile" class="btn btn-primary">Update Profile</button>
+    </form>
+  </div>
+  <div class="col-md-6">
+    <form method="POST">
+      {% csrf_token %}
+      <h5>Change Password</h5>
+      {{ password_form.as_p }}
+      <button type="submit" name="change_password" class="btn btn-warning">Change Password</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -9,4 +9,10 @@ urlpatterns = [
     path('task/<int:task_id>/complete/', views.mark_task_completed, name='mark_task_completed'),
     path('<int:pk>/add_health_log/', views_additional.add_health_log, name='add_health_log'),
     path('<int:pk>/add_task/', views_additional.add_task, name='add_task'),
+    path('profile/', views.profile_view, name='profile'),
+    path('ajax/react_or_comment/', views.react_or_comment, name='react_or_comment'),
+    path('logout/', views.user_logout, name='logout'),
+    path('login/', views.user_login, name='login'),
+    path('register/', views.register, name='register'),
+    path('ajax/delete_tree/<int:pk>/', views.delete_tree, name='delete_tree'),
 ]
