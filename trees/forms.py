@@ -1,20 +1,30 @@
 from django import forms
 from .models import Tree, HealthLog, Task
+from .location_data import COUNTRIES
 
 class TreeForm(forms.ModelForm):
+    latitude = forms.FloatField(widget=forms.HiddenInput(), required=False)
+    longitude = forms.FloatField(widget=forms.HiddenInput(), required=False)
+    species = forms.CharField(required=False)  # Make species not required
+    country = forms.ChoiceField(choices=COUNTRIES, required=False)
+    division = forms.CharField(required=False)
+    district = forms.CharField(required=False)
+    other_location = forms.CharField(required=False)
+
     class Meta:
         model = Tree
-        fields = ['name', 'species', 'location', 'date_planted', 'image']
+        fields = ['name', 'species', 'country', 'division', 'district', 'other_location', 'location', 'latitude', 'longitude', 'date_planted', 'image']
         widgets = {
-            'date_planted': forms.DateInput(attrs={'type': 'date'})
+            'date_planted': forms.DateInput(attrs={'type': 'date'}),
         }
 
 class HealthLogForm(forms.ModelForm):
     class Meta:
         model = HealthLog
-        fields = ['date', 'health_status', 'notes']
+        fields = ['date', 'health_status', 'notes', 'is_dead', 'death_reason']
         widgets = {
-            'date': forms.DateInput(attrs={'type': 'date'})
+            'date': forms.DateInput(attrs={'type': 'date'}),
+            'death_reason': forms.Textarea(attrs={'rows': 2}),
         }
 
 class TaskForm(forms.ModelForm):

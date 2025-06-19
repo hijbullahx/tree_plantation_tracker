@@ -1,0 +1,42 @@
+/* Custom overrides for Bootstrap theme - dark green and animated text */
+:root {
+  --bs-green: #145a32 !important; /* dark green */
+  --bs-success: #145a32 !important;
+  --bs-success-rgb: 20,90,50 !important;
+}
+
+.btn-success, .bg-success, .text-success, .border-success {
+  --bs-btn-bg: #145a32 !important;
+  --bs-btn-border-color: #145a32 !important;
+  --bs-btn-hover-bg: #117a3a !important;
+  --bs-btn-hover-border-color: #117a3a !important;
+  --bs-btn-active-bg: #0e5c2a !important;
+  --bs-btn-active-border-color: #0e5c2a !important;
+  --bs-success: #145a32 !important;
+  --bs-success-rgb: 20,90,50 !important;
+  background-color: #145a32 !important;
+  border-color: #145a32 !important;
+  color: #fff !important;
+}
+
+/* Animated text styles */
+@keyframes animated-gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.animated-text {
+  background: linear-gradient(270deg, #32fbe2, #145a32, #ea39b8, #32fbe2);
+  background-size: 600% 600%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: animated-gradient 4s ease-in-out infinite;
+}
+@keyframes fadeInUp {
+  0% { opacity: 0; transform: translateY(30px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.fade-in-up {
+  animation: fadeInUp 1.2s cubic-bezier(0.23, 1, 0.32, 1) both;
+}

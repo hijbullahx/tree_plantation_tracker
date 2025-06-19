@@ -2,13 +2,161 @@
 {% block title %}Add Tree{% endblock %}
 {% block content %}
 
-<h2>Add a New Tree</h2>
-<form method="POST" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-success">Submit</button>
-</form>
+<h2 class="mb-4 animated-text fade-in-up">Add a New Tree</h2>
+<div class="card p-4 shadow-sm">
+    <form method="POST" enctype="multipart/form-data" id="tree-form">
+        {% csrf_token %}
+        {% if form.errors %}
+            <div class="alert alert-danger">
+                <ul>
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+        <div class="mb-3">
+            {{ form.name.label_tag }}
+            {{ form.name }}
+        </div>
+        <div class="mb-3">
+            {{ form.species.label_tag }}
+            {{ form.species }}
+        </div>
+        <div class="mb-3">
+            {{ form.country.label_tag }}
+            {{ form.country }}
+        </div>
+        <div class="mb-3">
+            {{ form.division.label_tag }}
+            <select id="id_division" name="division" class="form-select">
+                <option value="">Select Division</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            {{ form.district.label_tag }}
+            <select id="id_district" name="district" class="form-select">
+                <option value="">Select District</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            {{ form.other_location.label_tag }}
+            {{ form.other_location }}
+        </div>
+        <div class="mb-3">
+            <label for="map" class="form-label">Select Exact Location on Map:</label>
+            <div id="map" style="height: 300px; width: 100%; border-radius: 8px;"></div>
+            <input type="hidden" id="id_latitude" name="latitude" value="{{ form.latitude.value|default:'' }}">
+            <input type="hidden" id="id_longitude" name="longitude" value="{{ form.longitude.value|default:'' }}">
+            <input type="hidden" id="id_location" name="location" value="{{ form.location.value|default:'' }}">
+        </div>
+        <div class="mb-3">
+            {{ form.date_planted.label_tag }}
+            {{ form.date_planted }}
+        </div>
+        <div class="mb-3">
+            {{ form.image.label_tag }}
+            {{ form.image }}
+        </div>
+        <button type="submit" class="btn btn-success fade-in-up" id="submit-btn">Submit</button>
+    </form>
+</div>
 
-<a href="/" class="btn btn-secondary mt-3">← Back to Tree List</a>
+<a href="/" class="btn btn-secondary mt-3 fade-in-up">&larr; Back to Tree List</a>
+
+<!-- Leaflet.js for free map integration -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/esri-leaflet-geocoder/dist/esri-leaflet-geocoder.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/esri-leaflet-geocoder/dist/esri-leaflet-geocoder.css" />
+<script>
+  // Example data for divisions and districts (should match location_data.py)
+  const DIVISIONS = {
+    'Bangladesh': ["Dhaka", "Chattogram", "Khulna", "Barisal", "Sylhet", "Rajshahi", "Rangpur", "Mymensingh"],
+    // ...add more as needed
+  };
+  const DISTRICTS = {
+    'Dhaka': ["Dhaka", "Gazipur", "Narayanganj", "Tangail", "Manikganj", "Munshiganj", "Narsingdi", "Faridpur", "Gopalganj", "Kishoreganj", "Madaripur", "Rajbari", "Shariatpur"],
+    'Chattogram': ["Chattogram", "Cox's Bazar", "Comilla", "Feni", "Brahmanbaria", "Rangamati", "Noakhali", "Chandpur", "Lakshmipur", "Khagrachari", "Bandarban"],
+    'Khulna': ["Khulna", "Bagerhat", "Satkhira", "Jessore", "Narail", "Magura", "Jhenaidah", "Kushtia", "Chuadanga", "Meherpur"],
+    'Barisal': ["Barisal", "Patuakhali", "Bhola", "Pirojpur", "Barguna", "Jhalokathi"],
+    'Sylhet': ["Sylhet", "Moulvibazar", "Habiganj", "Sunamganj"],
+    'Rajshahi': ["Rajshahi", "Bogra", "Joypurhat", "Naogaon", "Natore", "Chapai Nawabganj", "Pabna", "Sirajganj"],
+    'Rangpur': ["Rangpur", "Dinajpur", "Kurigram", "Gaibandha", "Thakurgaon", "Panchagarh", "Nilphamari", "Lalmonirhat"],
+    'Mymensingh': ["Mymensingh", "Netrokona", "Jamalpur", "Sherpur"],
+    // ...add more as needed
+  };
+  document.addEventListener('DOMContentLoaded', function() {
+    // Handle division dropdown
+    document.getElementById('id_country').addEventListener('change', function() {
+      var country = this.value;
+      var divisionSelect = document.getElementById('id_division');
+      divisionSelect.innerHTML = '<option value="">Select Division</option>';
+      if (DIVISIONS[country]) {
+        DIVISIONS[country].forEach(function(div) {
+          divisionSelect.innerHTML += `<option value="${div}">${div}</option>`;
+        });
+      }
+      document.getElementById('id_district').innerHTML = '<option value="">Select District</option>';
+    });
+    // Handle district dropdown
+    document.getElementById('id_division').addEventListener('change', function() {
+      var division = this.value;
+      var districtSelect = document.getElementById('id_district');
+      districtSelect.innerHTML = '<option value="">Select District</option>';
+      if (DISTRICTS[division]) {
+        DISTRICTS[division].forEach(function(dist) {
+          districtSelect.innerHTML += `<option value="${dist}">${dist}</option>`;
+        });
+      }
+    });
+    var defaultLat = 19.0760;
+    var defaultLng = 72.8777;
+    var map = L.map('map').setView([defaultLat, defaultLng], 10);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+    var marker = L.marker([defaultLat, defaultLng], {draggable:true}).addTo(map);
+    function setLocationField(lat, lng) {
+      document.getElementById('id_latitude').value = lat;
+      document.getElementById('id_longitude').value = lng;
+      // Compose location string from dropdowns and other_location
+      var country = document.getElementById('id_country').value;
+      var division = document.getElementById('id_division').value;
+      var district = document.getElementById('id_district').value;
+      var other = document.getElementById('id_other_location').value;
+      var locParts = [];
+      if (country) locParts.push(country);
+      if (division) locParts.push(division);
+      if (district) locParts.push(district);
+      if (other) locParts.push(other);
+      document.getElementById('id_location').value = locParts.join(', ');
+    }
+    marker.on('dragend', function(e) {
+      var latlng = marker.getLatLng();
+      setLocationField(latlng.lat, latlng.lng);
+    });
+    map.on('click', function(e) {
+      marker.setLatLng(e.latlng);
+      setLocationField(e.latlng.lat, e.latlng.lng);
+    });
+    // Set initial values
+    setLocationField(defaultLat, defaultLng);
+    // Prevent submit if location is not set
+    document.getElementById('tree-form').addEventListener('submit', function(e) {
+      var loc = document.getElementById('id_location').value;
+      if (!loc) {
+        e.preventDefault();
+        alert('Please select a location and set all required fields.');
+      }
+    });
+  });
+</script>
 
 {% endblock %}

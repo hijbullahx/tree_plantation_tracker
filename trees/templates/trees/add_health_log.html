@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Add Health Log{% endblock %}
+{% block content %}
+<h2 class="mb-4 animated-text fade-in-up">Add Health Log for {{ tree.name }}</h2>
+<div class="card p-4 shadow-sm">
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success fade-in-up">Submit</button>
+    </form>
+</div>
+<a href="/trees/{{ tree.id }}/" class="btn btn-secondary mt-3 fade-in-up">&larr; Back to Tree Details</a>
+{% endblock %}

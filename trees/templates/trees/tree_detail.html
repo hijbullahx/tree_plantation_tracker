@@ -4,53 +4,94 @@
 
 <div class="card mb-4">
     <div class="card-body">
-        <h3 class="card-title">{{ tree.name }} ({{ tree.species }})</h3>
-        <p><strong>Location:</strong> {{ tree.location }}</p>
+        <h3 class="card-title animated-text fade-in-up">{{ tree.name }}{% if tree.species %} ({{ tree.species }}){% endif %}</h3>
+        <p><strong>Location:</strong>
+            {% if tree.latitude and tree.longitude %}
+                <a href="https://www.openstreetmap.org/?mlat={{ tree.latitude }}&mlon={{ tree.longitude }}#map=18/{{ tree.latitude }}/{{ tree.longitude }}" target="_blank">
+                    {{ tree.location }} <span class="badge bg-info">Map</span>
+                </a>
+            {% else %}
+                {{ tree.location }}
+            {% endif %}
+        </p>
         <p><strong>Planted on:</strong> {{ tree.date_planted }}</p>
+        <p><strong>Last Updated:</strong> {{ tree.updated_at|date:'Y-m-d H:i' }}</p>
         {% if tree.image %}
-            <img src="{{ tree.image.url }}" class="img-fluid" style="max-width: 300px;">
+            <img src="{{ tree.image.url }}" class="img-fluid rounded mb-3" style="max-width: 300px;">
         {% endif %}
+        <h4>🌿 Health Logs</h4>
+        <ul class="list-group mb-3">
+            {% for log in health_logs %}
+                <li class="list-group-item {% if log.is_dead %}bg-danger text-white{% endif %}">
+                    {{ log.date }} – <strong>{{ log.health_status }}</strong><br>
+                    <small>{{ log.notes }}</small>
+                    {% if log.is_dead and log.death_reason %}<br><span class="fw-bold">Reason: {{ log.death_reason }}</span>{% endif %}
+                </li>
+            {% empty %}
+                <li class="list-group-item">No health logs.</li>
+            {% endfor %}
+        </ul>
+        {% if not tree.is_dead %}
+            <a href="{% url 'add_health_log' tree.id %}" class="btn btn-outline-success fade-in-up mb-2">Add Health Log</a>
+            <h4>🧑‍🌾 Scheduled Tasks</h4>
+            <ul class="list-group mb-3">
+                {% for task in tasks %}
+                    <li class="list-group-item d-flex align-items-center">
+                        <span class="me-2">{{ task.scheduled_date }} — {{ task.task_type }}</span>
+                        {% if task.completed %}
+                            <span class="ms-auto text-success" title="Completed">✅ Done</span>
+                        {% else %}
+                            <input type="checkbox" class="form-check-input ms-auto mark-complete-checkbox" data-task-id="{{ task.id }}">
+                            <span class="ms-2 text-danger">❌ Not Done</span>
+                        {% endif %}
+                    </li>
+                {% empty %}
+                    <li class="list-group-item">No tasks scheduled.</li>
+                {% endfor %}
+            </ul>
+            <a href="{% url 'add_task' tree.id %}" class="btn btn-outline-primary fade-in-up">Add Scheduled Task</a>
+            <script>
+            document.addEventListener('DOMContentLoaded', function() {
+              document.querySelectorAll('.mark-complete-checkbox').forEach(function(checkbox) {
+                checkbox.addEventListener('change', function() {
+                  if (this.checked) {
+                    fetch(`/task/${this.dataset.taskId}/complete/`, {
+                      method: 'POST',
+                      headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                      },
+                    }).then(() => {
+                      this.parentElement.innerHTML = '<span class="ms-auto text-success" title="Completed">✅ Done</span>';
+                    });
+                  }
+                });
+              });
+            });
+            </script>
+        {% endif %}
+        <div class="mt-4">
+            {% if not tree.is_dead %}
+                <button class="btn btn-danger" id="show-dead-form" type="button">Mark as Dead</button>
+                <form method="POST" id="dead-form" style="display:none;">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="mark_dead">
+                    <div class="mb-2">
+                        <label for="death_reason" class="form-label">Provide Reason:</label>
+                        <textarea name="death_reason" id="death_reason" class="form-control" rows="2" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-danger">Submit</button>
+                </form>
+                <script>
+                document.getElementById('show-dead-form').onclick = function() {
+                    document.getElementById('dead-form').style.display = 'block';
+                    this.style.display = 'none';
+                };
+                </script>
+            {% elif tree.death_reason %}
+                <p class="text-danger mt-3"><strong>Reason:</strong> {{ tree.death_reason }}</p>
+            {% endif %}
+        </div>
+        <a href="/" class="btn btn-secondary mt-3 fade-in-up">&larr; Back to Tree List</a>
     </div>
 </div>
-
-<h4>🌿 Health Logs</h4>
-<ul class="list-group mb-3">
-    {% for log in health_logs %}
-        <li class="list-group-item">
-            {{ log.date }} – <strong>{{ log.health_status }}</strong><br>
-            <small>{{ log.notes }}</small>
-        </li>
-    {% empty %}
-        <li class="list-group-item">No health logs.</li>
-    {% endfor %}
-</ul>
-
-<form method="POST" class="mb-4">
-    {% csrf_token %}
-    <h5>Add Health Log</h5>
-    {{ health_form.as_p }}
-    <button type="submit" name="form_type" value="health" class="btn btn-outline-success">Add Health Log</button>
-</form>
-
-<h4>🧑‍🌾 Scheduled Tasks</h4>
-<ul class="list-group mb-3">
-    {% for task in tasks %}
-        <li class="list-group-item">
-            {{ task.scheduled_date }} — {{ task.task_type }} 
-            {% if task.completed %}✅ Done{% else %}❌ Not Done{% endif %}
-        </li>
-    {% empty %}
-        <li class="list-group-item">No tasks scheduled.</li>
-    {% endfor %}
-</ul>
-
-<form method="POST" class="mb-4">
-    {% csrf_token %}
-    <h5>Schedule a Task</h5>
-    {{ task_form.as_p }}
-    <button type="submit" name="form_type" value="task" class="btn btn-outline-primary">Add Task</button>
-</form>
-
-<a class="btn btn-secondary" href="/">← Back to List</a>
-
 {% endblock %}
